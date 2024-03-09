@@ -74,6 +74,7 @@ config = {
     'pretrained_pth': './DeformableConformer.pth',
     'cover_old_param': False, # default not to cover old param
     'new_file_name': './FineTunedParam.pth',
+    'load_pretrained_param': True,
 
     # training config (adam)
     'batch_size': 30,
@@ -447,21 +448,25 @@ class ModelRunner():
         self.model = DeformableConformer(config=self.config).cuda()
 
         # load model first
-        print(f"Loading pre-trained parameters: {config['pretrained_pth']}.")
-        model_dict = self.model.state_dict()
-        pretrained_dict = torch.load(config["pretrained_pth"])
-        pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in model_dict}
-        
-        not_loaded_keys = [k for k in model_dict.keys() if k not in pretrained_dict.keys()]
-        if len(not_loaded_keys) == 0:
-            print("All parameters loaded successfully.")
-        else:
-            print("The following parameters were not loaded:")
-            for key in not_loaded_keys:
-                print(key)
+        if config['load_pretrained_param']:
+            print(f"Loading pre-trained parameters: {config['pretrained_pth']}.")
+            model_dict = self.model.state_dict()
+            pretrained_dict = torch.load(config["pretrained_pth"])
+            pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in model_dict}
             
-        model_dict.update(pretrained_dict)
-        self.model.load_state_dict(model_dict)
+            not_loaded_keys = [k for k in model_dict.keys() if k not in pretrained_dict.keys()]
+            if len(not_loaded_keys) == 0:
+                print("All parameters loaded successfully.")
+            else:
+                print("The following parameters were not loaded:")
+                for key in not_loaded_keys:
+                    print(key)
+                
+            model_dict.update(pretrained_dict)
+            self.model.load_state_dict(model_dict)
+        else:
+            # Initialize random parameters
+            print("Randomly initializing model parameters.")
             
     def finetune(self, input):
         '''
